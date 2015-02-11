@@ -1,0 +1,10 @@
+# Data for importing to our phonebook.
+
+Alex Green 8-173-928-4567
+Michael R.      822223333456
+Ibn-Hattab  8(495)678-2323
+dorris 777 8888 9992
+Boris boris@gmail.com
+
+
+
