@@ -1,45 +1,96 @@
 import psycopg2
 # http://initd.org/psycopg/docs/usage.html - about psql connection
 
-# Connect to an existing database:
-conn=psycopg2.connect(
-    dbname="pbook",
-    user="alex",
-#    host='127.0.0.1',
-#    port=''
-)
+class DB:
+    def __init__(self, dbname, user, host=''):
+        self.conn = psycopg2.connect(dbname=dbname, user=user, host=host)
+        self.cur = self.conn.cursor()
 
-# Open a cursor to perform database operations:
-cur = conn.cursor()
-# cur.execute("DROP TABLE IF EXISTS clients;")
-cur.execute("SELECT * FROM information_schema.tables WHERE table_name=%s;",
-            ('clients',))
-if not bool(cur.rowcount):
-    cur.execute("CREATE TABLE clients (id serial PRIMARY KEY, " +
+    # Check the existance of the clients table in the phonebook  (+ create it).
+    def check_table(self):
+        # Check existance of table clients:
+        self.cur.execute("SELECT * FROM information_schema.tables WHERE" +
+                         " table_name='clients';")
+
+        # Create a table if it does not exist:
+        if not bool(self.cur.rowcount):
+            self.cur.execute("CREATE TABLE clients (id serial PRIMARY KEY, " +
                 "name varchar, phone varchar);")
 
-cur.execute("INSERT INTO clients(name, phone) VALUES(%s, %s)", ("Alex K",
-            "9206133111"))
-cur.execute("INSERT INTO clients(name, phone) VALUES(%s, %s)", ("Denis Green",
-            "925553333333"))
-cur.execute("INSERT INTO clients(name, phone) VALUES(%s, %s)", ("Jenny",
-            "0000011111"))
-cur.execute("INSERT INTO clients(name, phone) VALUES(%s, %s)", ("Robbie",
-            "8888883333"))
+    # Show number of records in the phonebook:
+    def number_of_records(self):
+        self.cur.execute("SELECT * FROM clients")
+        return len(self.cur.fetchall())
 
-cur.execute("SELECT * FROM clients;")
-# print("cur.fetchall: " + str(cur.fetchall()))
-print("cur.fetchone 1: " + str(cur.fetchone()))
-# print("cur.fetchone 2: " + str(cur.fetchone()))
-# print("cur.fetchall: " + str(cur.fetchall()))
-print ("cur.fetchmany(100): " + str(cur.fetchmany(100)))
+    # Add record to the phonebook:
+    def add_record(self, name, phone):
+        self.cur.execute("INSERT INTO clients(name, phone) VALUES(%s, %s)",
+                         (name, phone))
+        self.conn.commit()
 
-# print ("type(conn):" + str(type(conn)))
-# print ("type(cur):" + str(type(cur)))
-conn.commit()
-cur.close()
-conn.close()
+    # Find record in the PB by one of the fields:
+    def find_by_field(self, field, name):
+        self.cur.execute("SELECT * FROM clients WHERE "+field+"=%s;",(name,))
+        return(self.cur.fetchall())
 
-print (dir(cur))
-print ("\ncur.description:"+str(cur.description))
-print (cur.rowcount)
+    # Show all records in the phonebook:
+    def find_all(self):
+        self.cur.execute("SELECT * FROM clients;")
+        return(self.cur.fetchall())
+
+    # Delete all records from the phonebook:
+    def del_all(self):
+        self.cur.execute("DELETE FROM clients;")
+        self.conn.commit()
+        self.cur.execute("SELECT * FROM clients;")
+        return(self.cur.fetchall())
+
+    # Close connection with phonebook database:
+    def close_db(self):
+        self.cur.close()
+        self.conn.close()
+
+# Convert list to formatted string while printing:
+def conv_to_str(list1):
+    return str(list1).strip('[]').replace('), (', '\n').strip('()')
+
+if __name__ == '__main__':
+    p_db = DB('pbook', 'alex')
+    p_db.check_table()
+    flag = True
+    while flag:
+        print("="*30+"\nWelcome to my phonebook! \n\nWhat do you want to do?")
+        print("s - show list;\na - add a new record; \nn - find by name;")
+        print("p - find by phone;\ne - erase all book")
+        key=input("-->")
+
+        if key=="s":
+            print ("This the hole phonebook:")
+            #print(str(p_db.find_all()).strip('[]').replace('), (', '\n').strip('()'))
+            print(conv_to_str(p_db.find_all()))
+
+        elif key=='n':  
+            name = input("Give me a name:")
+            list_of_fetch_records = p_db.find_by_field('name', name)
+            if len(list_of_fetch_records)==0:
+                print ("\nThere are no such records.\n")
+            else:
+                print(conv_to_str(list_of_fetch_records))
+
+        elif key=='p':  
+            phone = input("Give me a phone number:")
+            list_of_fetch_records = p_db.find_by_field('phone', phone)
+            if len(list_of_fetch_records)==0:
+                print ("\nThere are no such records.\n")
+            else:
+                print(conv_to_str(list_of_fetch_records))
+
+
+        elif key=='e':
+            p_db.del_all()
+            print("\nThe phonebook was erased.\n")
+        
+        key=input("If you want to quit, please, press 'q':")
+        if key=='q':
+            p_db.close_db()
+            flag=False
