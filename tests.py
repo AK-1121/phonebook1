@@ -1,11 +1,13 @@
 import unittest
 from pb import DB
+from settings import *
 
 
 class TestPhoneBook(unittest.TestCase):
 
     def setUp(self):
-        self.p_db = DB('pbook', 'alex')
+        #self.p_db = DB('pbook', 'alex')
+        self.p_db = DB(DB_NAME, USER)
 
     # Tested methods:
     # check_table(), number_of_records(), add_record()

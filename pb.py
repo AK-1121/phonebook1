@@ -1,5 +1,6 @@
 import psycopg2
 import re
+from settings import *
 
 # http://initd.org/psycopg/docs/usage.html - about psql connection
 
@@ -92,7 +93,8 @@ def clean_phone(phone):
     return re.sub("[() \-\s]", "", phone)
 
 if __name__ == '__main__':
-    p_db = DB('pbook', 'alex')
+    #p_db = DB('pbook', 'alex')
+    p_db = DB(DB_NAME, USER)
     p_db.check_table()
     flag = True
     while flag:
