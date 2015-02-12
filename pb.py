@@ -6,8 +6,8 @@ from settings import *
 
 
 class DB:
-    def __init__(self, dbname, user, host=''):
-        self.conn = psycopg2.connect(dbname=dbname, user=user, host=host)
+    def __init__(self, dbname, user, host='', pswd=''):
+        self.conn = psycopg2.connect(dbname=dbname, user=user, host=host, password=pswd)
         self.cur = self.conn.cursor()
 
     # Check the existance of the clients table in the phonebook  (+ create it).
@@ -93,8 +93,7 @@ def clean_phone(phone):
     return re.sub("[() \-\s]", "", phone)
 
 if __name__ == '__main__':
-    #p_db = DB('pbook', 'alex')
-    p_db = DB(DB_NAME, USER)
+    p_db = DB(DB_NAME, USER, HOST, PSWD)
     p_db.check_table()
     flag = True
     while flag:
